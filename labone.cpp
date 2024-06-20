@@ -48,7 +48,7 @@ void LabOne::setupUI()
     QPushButton *requestResourceButton = new QPushButton("请求资源");
     QPushButton *loadSampleDataButton = new QPushButton("加载样本数据");
     checkSafetyButton = new QPushButton("检查安全性");
-     setInitialResourcesButton = new QPushButton("设置可用资源");
+    setInitialResourcesButton = new QPushButton("设置可用资源");
 
     // 设置按钮固定宽度
     addProcessButton->setFixedWidth(120);
@@ -74,12 +74,12 @@ void LabOne::setupUI()
     needTable = new QTableWidget();
     availableTable = new QTableWidget();
 
-    mainLayout->addWidget(new QLabel("资源分配:"));
-    mainLayout->addWidget(allocationTable);
     mainLayout->addWidget(new QLabel("最大需求:"));
     mainLayout->addWidget(maxTable);
     mainLayout->addWidget(new QLabel("目前需求:"));
     mainLayout->addWidget(needTable);
+    mainLayout->addWidget(new QLabel("资源分配:"));
+    mainLayout->addWidget(allocationTable);
     mainLayout->addWidget(new QLabel("可用资源:"));
     mainLayout->addWidget(availableTable);
 
