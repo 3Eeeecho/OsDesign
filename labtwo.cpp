@@ -3,28 +3,28 @@
 
 #include <QInputDialog>
 #include <QSpinBox>
+#include <QDebug>
 
 LabTwo::LabTwo(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::LabTwo)
-    ,timer(new QTimer(this))
-    ,currentTime(0)
-    ,isRunning(false)
-    ,currentAlgorithm(0)
+    , timer(new QTimer(this))
+    , currentTime(0)
+    , isRunning(false)
+    , currentAlgorithm(0)
 {
     ui->setupUi(this);
     setWindowTitle("实验二");
-
     QObject::disconnect(ui->loadDataButton,nullptr,this,nullptr);
     QObject::disconnect(ui->compareButton,nullptr,this,nullptr);
     QObject::disconnect(ui->addProcessButton,nullptr,this,nullptr);
 
-    connect(ui->loadDataButton,&QPushButton::clicked,this,&LabTwo::on_loadDataButton_clicked);
-    connect(ui->startButton,&QPushButton::clicked,this,&LabTwo::on_startButton_clicked);
-    connect(ui->pauseButton,&QPushButton::clicked,this,&LabTwo::on_pauseButton_clicked);
-    connect(ui->compareButton,&QPushButton::clicked,this,&LabTwo::on_compareButton_clicked);
-    connect(ui->continueButton,&QPushButton::clicked,this,&LabTwo::on_continueButton_clicked);
-    connect(ui->addProcessButton,&QPushButton::clicked,this,&LabTwo::on_addProcessButton_clicked);
+    connect(ui->loadDataButton, &QPushButton::clicked, this, &LabTwo::on_loadDataButton_clicked);
+    connect(ui->startButton, &QPushButton::clicked, this, &LabTwo::on_startButton_clicked);
+    connect(ui->pauseButton, &QPushButton::clicked, this, &LabTwo::on_pauseButton_clicked);
+    connect(ui->compareButton, &QPushButton::clicked, this, &LabTwo::on_compareButton_clicked);
+    connect(ui->continueButton, &QPushButton::clicked, this, &LabTwo::on_continueButton_clicked);
+    connect(ui->addProcessButton, &QPushButton::clicked, this, &LabTwo::on_addProcessButton_clicked);
 
     connect(timer, &QTimer::timeout, this, &LabTwo::schedule);
 }
@@ -46,7 +46,7 @@ void LabTwo::on_startButton_clicked()
 {
     if (!isRunning && !processList.isEmpty()) {
         currentTime = 0; // 初始化当前时间
-        currentAlgorithm=ui->comboBox->currentIndex();
+        currentAlgorithm = ui->comboBox->currentIndex();
         processList = originalList;
         initializeReadyQueue(); // 初始化就绪队列
         timer->start(1000); // 每秒调度一次
@@ -119,8 +119,8 @@ void LabTwo::on_addProcessButton_clicked()
     displayProcessStates();
 }
 
-
-void LabTwo::loadSampleData(const QString &fileName) {
+void LabTwo::loadSampleData(const QString &fileName)
+{
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QMessageBox::warning(this, "警告", "无法打开文件");
@@ -193,8 +193,8 @@ void LabTwo::updateProcessList(const PCB& process)
     }
 }
 
-void LabTwo::displayProcessStates() {
-
+void LabTwo::displayProcessStates()
+{
     ui->resultTableWidget->setRowCount(processList.size()); // 设置行数
     for (int row = 0; row < processList.size(); ++row) {
         const PCB &process = processList[row];
@@ -209,7 +209,8 @@ void LabTwo::displayProcessStates() {
     }
 }
 
-void LabTwo::initializeReadyQueue() {
+void LabTwo::initializeReadyQueue()
+{
     readyQueue.clear();
     for (PCB &process : processList) {
         if (process.ArrivalTime <= currentTime) {
@@ -221,7 +222,7 @@ void LabTwo::initializeReadyQueue() {
 void LabTwo::updateReadyQueue()
 {
     for (int i = 0; i < processList.size(); ++i) {
-        if (processList[i].ArrivalTime <= currentTime && !readyQueue.contains(processList[i]) && processList[i].State!="Finished") {
+        if (processList[i].ArrivalTime <= currentTime && !readyQueue.contains(processList[i]) && processList[i].State != "Finished") {
             readyQueue.append(processList[i]);
         }
     }
@@ -273,7 +274,7 @@ void LabTwo::firstComeFirstServe()
     });
 
     // 取出就绪队列中的第一个进程
-    PCB &process = readyQueue.front();
+    PCB process = readyQueue.front();
     readyQueue.removeFirst();
 
     // 设置当前进程状态为Running
@@ -309,7 +310,7 @@ void LabTwo::shortestJobFirst()
     });
 
     // 取出就绪队列中的第一个进程
-    PCB &process = readyQueue.front();
+    PCB process = readyQueue.front();
     readyQueue.removeFirst();
 
     // 设置当前进程状态为Running
@@ -379,7 +380,6 @@ void LabTwo::staticPriority()
     }
 
     updateProcessList(process); // 更新processList
-
 }
 
 void LabTwo::highestResponseRatioNext()
@@ -463,14 +463,15 @@ void LabTwo::calculatePerformanceMetrics(const QVector<PCB>& processes, double& 
 
 void LabTwo::updatePerformanceMetrics()
 {
-    QVector<double> avgTurnaroundTimes;
-    QVector<double> avgWaitTimes;
+    QVector<double> avgTurnaroundTimes(5, 0);
+    QVector<double> avgWaitTimes(5, 0);
+    QStringList algorithms = {"轮转法", "先来先服务", "短作业优先", "静态优先级优先", "高响应比"};
 
     for (int i = 0; i < 5; ++i) {
         // 设置当前调度算法并初始化就绪队列和当前时间
         currentAlgorithm = i;
+        processList = originalList;
         readyQueue.clear();
-        initializeReadyQueue();
         currentTime = 0;
         isRunning = true;
 
@@ -482,8 +483,8 @@ void LabTwo::updatePerformanceMetrics()
         // 计算性能指标
         double avgTurnaroundTime, avgWaitTime;
         calculatePerformanceMetrics(processList, avgTurnaroundTime, avgWaitTime);
-        avgTurnaroundTimes.append(avgTurnaroundTime);
-        avgWaitTimes.append(avgWaitTime);
+        avgTurnaroundTimes[i] = avgTurnaroundTime;
+        avgWaitTimes[i] = avgWaitTime;
 
         // 恢复原始进程列表
         processList = originalList;
@@ -491,7 +492,6 @@ void LabTwo::updatePerformanceMetrics()
 
     // 显示性能比较结果
     QString result;
-    QStringList algorithms = {"轮转法", "先来先服务", "短作业优先", "静态优先级优先", "高响应比"};
     for (int i = 0; i < 5; ++i) {
         result += QString("%1: 平均周转时间: %2s 平均等待时间: %3s\n")
                       .arg(algorithms[i])
@@ -526,6 +526,3 @@ void LabTwo::schedule()
 
     displayProcessStates(); // 每次调度后更新显示
 }
-
-
-
